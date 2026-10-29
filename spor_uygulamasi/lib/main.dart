@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
-import 'views/auth/login_view.dart';
+import 'screens/auth_screen.dart';
+import 'screens/main_navigation_screen.dart';
+import 'screens/catalog_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const SporUygulamasiApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SporUygulamasiApp extends StatelessWidget {
+  const SporUygulamasiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Spor Uygulaması',
+      title: 'Spor Takip',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const LoginView(),
+      theme: AppTheme.lightTheme,
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const AuthScreen(),
+        '/home': (context) => const MainNavigationScreen(),
+        '/catalog': (context) => const CatalogScreen(),
+      },
     );
   }
 }
