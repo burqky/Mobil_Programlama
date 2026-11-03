@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../data/app_state_data.dart';
 import '../models/body_measurement.dart';
+import '../widgets/measurement_metric_card.dart';
 
 class MeasurementsTab extends StatefulWidget {
   const MeasurementsTab({super.key});
@@ -15,7 +16,9 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
 
   void _showAddMeasurementDialog() {
     final nextWeekNumber = AppStateData.bodyMeasurements.length + 1;
-    final dateController = TextEditingController(text: '$nextWeekNumber. Hafta');
+    final dateController = TextEditingController(
+      text: '$nextWeekNumber. Hafta',
+    );
     final weightController = TextEditingController();
     final fatController = TextEditingController();
     final armController = TextEditingController();
@@ -208,7 +211,7 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
           ),
           const SizedBox(height: 12),
 
-          // 2 Sütunlu Özet Izgarası (GridView.count)
+          // 2 Sütunlu Özet Izgarası (lib/widgets/measurement_metric_card.dart)
           SizedBox(
             height: 195,
             child: GridView.count(
@@ -218,25 +221,33 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
               childAspectRatio: 1.9,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _buildMetricCard(
-                  'Kilo',
-                  '${latest.weight} kg',
-                  Icons.monitor_weight_outlined,
+                MeasurementMetricCard(
+                  title: 'Kilo',
+                  value: '${latest.weight} kg',
+                  icon: Icons.monitor_weight_outlined,
+                  isSelected: _selectedMetric == 'Kilo',
+                  onTap: () => setState(() => _selectedMetric = 'Kilo'),
                 ),
-                _buildMetricCard(
-                  'Yağ Oranı',
-                  '%${latest.fatRatio}',
-                  Icons.percent_outlined,
+                MeasurementMetricCard(
+                  title: 'Yağ Oranı',
+                  value: '%${latest.fatRatio}',
+                  icon: Icons.percent_outlined,
+                  isSelected: _selectedMetric == 'Yağ Oranı',
+                  onTap: () => setState(() => _selectedMetric = 'Yağ Oranı'),
                 ),
-                _buildMetricCard(
-                  'Kol',
-                  '${latest.armCircumference} cm',
-                  Icons.fitness_center_outlined,
+                MeasurementMetricCard(
+                  title: 'Kol',
+                  value: '${latest.armCircumference} cm',
+                  icon: Icons.fitness_center_outlined,
+                  isSelected: _selectedMetric == 'Kol',
+                  onTap: () => setState(() => _selectedMetric = 'Kol'),
                 ),
-                _buildMetricCard(
-                  'Bel',
-                  '${latest.waistCircumference} cm',
-                  Icons.straighten_outlined,
+                MeasurementMetricCard(
+                  title: 'Bel',
+                  value: '${latest.waistCircumference} cm',
+                  icon: Icons.straighten_outlined,
+                  isSelected: _selectedMetric == 'Bel',
+                  onTap: () => setState(() => _selectedMetric = 'Bel'),
                 ),
               ],
             ),
@@ -257,14 +268,17 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '$_selectedMetric Değişim Grafiği (${_getMetricUnit()})',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
+                    Expanded(
+                      child: Text(
+                        '$_selectedMetric Değişim Grafiği (${_getMetricUnit()})',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     const Text(
                       'Kartlara dokunarak değiştirin',
                       style: TextStyle(
@@ -373,73 +387,6 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMetricCard(String title, String value, IconData icon) {
-    final bool isSelected = _selectedMetric == title;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedMetric = title;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.background,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? Colors.white : AppColors.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

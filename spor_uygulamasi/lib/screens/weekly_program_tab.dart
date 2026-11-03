@@ -3,6 +3,7 @@ import '../core/theme/app_colors.dart';
 import '../data/app_state_data.dart';
 import '../models/assigned_exercise.dart';
 import '../models/catalog_exercise.dart';
+import '../widgets/day_selector_bar.dart';
 
 class WeeklyProgramTab extends StatefulWidget {
   const WeeklyProgramTab({super.key});
@@ -143,43 +144,11 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
 
     return Column(
       children: [
-        // Yatay gün seçici
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          child: SizedBox(
-            height: 38,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: AppStateData.weekDays.map((day) {
-                final bool selected = day == _selectedDay;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => setState(() => _selectedDay = day),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary : AppColors.background,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        day,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.normal,
-                          color: selected ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+        // Yatay gün seçici (lib/widgets/day_selector_bar.dart)
+        DaySelectorBar(
+          days: AppStateData.weekDays,
+          selectedDay: _selectedDay,
+          onDaySelected: (day) => setState(() => _selectedDay = day),
         ),
 
         // Üst aksiyon butonları

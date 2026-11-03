@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../data/app_state_data.dart';
+import '../widgets/custom_text_field.dart';
 import 'main_navigation_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -125,6 +126,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             width: 48,
                             height: 48,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                                  Icons.fitness_center,
+                                  size: 36,
+                                  color: AppColors.primary,
+                                ),
                           ),
                         ),
                       ),
@@ -155,7 +162,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Giriş formu kartı
+                  // Giriş formu kartı (lib/widgets/custom_text_field.dart kullanımı)
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(18),
@@ -164,49 +171,40 @@ class _AuthScreenState extends State<AuthScreen> {
                         children: [
                           // Sadece kayıt modunda Ad Soyad gösterilir
                           if (_mode == 1) ...[
-                            TextField(
+                            CustomTextField(
                               controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Ad Soyad',
-                                hintText: 'Adınız ve soyadınız',
-                                prefixIcon: Icon(Icons.person_outline, size: 20),
-                                border: OutlineInputBorder(),
-                              ),
+                              labelText: 'Ad Soyad',
+                              hintText: 'Adınız ve soyadınız',
+                              prefixIcon: Icons.person_outline,
                             ),
                             const SizedBox(height: 12),
                           ],
 
-                          TextField(
+                          CustomTextField(
                             controller: _emailController,
+                            labelText: 'E-posta',
+                            hintText: 'ornek@mail.com',
+                            prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'E-posta',
-                              hintText: 'ornek@mail.com',
-                              prefixIcon: Icon(Icons.email_outlined, size: 20),
-                              border: OutlineInputBorder(),
-                            ),
                           ),
                           const SizedBox(height: 12),
 
-                          TextField(
+                          CustomTextField(
                             controller: _passwordController,
+                            labelText: _mode == 2 ? 'Yeni Şifre' : 'Şifre',
+                            hintText: 'Şifrenizi girin',
+                            prefixIcon: Icons.lock_outline,
                             obscureText: _hidePassword,
-                            decoration: InputDecoration(
-                              labelText: _mode == 2 ? 'Yeni Şifre' : 'Şifre',
-                              hintText: 'Şifrenizi girin',
-                              prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                              border: const OutlineInputBorder(),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _hidePassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  setState(() => _hidePassword = !_hidePassword);
-                                },
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _hidePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                size: 20,
                               ),
+                              onPressed: () {
+                                setState(() => _hidePassword = !_hidePassword);
+                              },
                             ),
                           ),
 

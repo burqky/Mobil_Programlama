@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../data/app_state_data.dart';
 import '../models/assigned_exercise.dart';
+import '../widgets/day_selector_bar.dart';
+import '../widgets/exercise_card.dart';
 
 class DailyProgramTab extends StatefulWidget {
   const DailyProgramTab({super.key});
@@ -11,16 +13,24 @@ class DailyProgramTab extends StatefulWidget {
 }
 
 class _DailyProgramTabState extends State<DailyProgramTab> {
+  late final String _todayDay;
   late String _selectedDay;
+  bool _showOtherDaysBrowser = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = AppStateData.weekDays.first;
+    // Sistemde bugün hangi günse otomatik olarak o günün programı yüklenir
+    _todayDay = AppStateData.todayName;
+    _selectedDay = _todayDay;
   }
 
-  // Hareketi tamamlama ve ağırlık/süre kaydetme penceresi
+  bool get _isViewingToday => _selectedDay == _todayDay;
+
+  // Hareketi tamamlama ve ağırlık/süre kaydetme penceresi (Sadece bugünün hareketleri için)
   void _completeExerciseDialog(AssignedExercise item) {
+    if (!_isViewingToday) return;
+
     final TextEditingController valCtrl = TextEditingController(
       text: item.targetValue.toStringAsFixed(0),
     );
@@ -75,7 +85,8 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                   Navigator.pop(dialogContext);
 
                   // Geçen hafta veya hedefin altında kalındıysa uyarı veriyoruz
-                  if (entered < item.lastWeekValue || entered < item.targetValue) {
+                  if (entered < item.lastWeekValue ||
+                      entered < item.targetValue) {
                     final String msg =
                         '${item.exercise.name} (${entered.toStringAsFixed(0)} ${item.exercise.unitLabel}), hedefinizin (${item.targetValue.toStringAsFixed(0)} ${item.exercise.unitLabel}) veya geçen haftanın (${item.lastWeekValue.toStringAsFixed(0)} ${item.exercise.unitLabel}) gerisinde kaldı.';
 
@@ -126,6 +137,25 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
     );
   }
 
+  // Tamamlanan bir hareketi tekrar yapılacaklar listesine alır
+  void _repeatExercise(AssignedExercise item) {
+    if (!_isViewingToday) return;
+
+    setState(() {
+      item.isCompleted = false;
+      item.currentValue = null;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${item.exercise.name} tekrar yapılacaklar listesine alındı.',
+        ),
+        backgroundColor: AppColors.primary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeList = AppStateData.assignedExercises
@@ -138,64 +168,160 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Yatay gün seçimi
+        // Üst Bilgi ve "Diğer Günlere Göz At" Kontrol Barı (Mobil ekranlara tam uyumlu tek satır düzen)
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          child: SizedBox(
-            height: 38,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: AppStateData.weekDays.map((day) {
-                final bool selected = day == _selectedDay;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => setState(() => _selectedDay = day),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary : AppColors.background,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        day,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.normal,
-                          color: selected ? Colors.white : AppColors.textPrimary,
-                        ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  _isViewingToday
+                      ? Icons.today_rounded
+                      : Icons.visibility_outlined,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _isViewingToday ? 'Bugünün Programı' : 'İncelenen Gün',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
+                    Text(
+                      _selectedDay,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                );
-              }).toList(),
-            ),
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (!_isViewingToday) {
+                      _selectedDay = _todayDay;
+                      _showOtherDaysBrowser = false;
+                    } else {
+                      _showOtherDaysBrowser = !_showOtherDaysBrowser;
+                    }
+                  });
+                },
+                icon: Icon(
+                  !_isViewingToday
+                      ? Icons.restore_rounded
+                      : (_showOtherDaysBrowser
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.calendar_view_week_rounded),
+                  size: 16,
+                ),
+                label: Text(
+                  !_isViewingToday
+                      ? 'Bugüne Dön'
+                      : (_showOtherDaysBrowser
+                          ? 'Günleri Gizle'
+                          : 'Diğer Günler'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
-        // Günün hareketleri (Tek ve ferah kaydırılabilir liste)
+        // Kullanıcı "Diğer Günler" butonuna bastığında açılan yatay gün seçici
+        if (_showOtherDaysBrowser)
+          DaySelectorBar(
+            days: AppStateData.weekDays,
+            selectedDay: _selectedDay,
+            onDaySelected: (day) => setState(() => _selectedDay = day),
+          ),
+
+        // Günün hareketleri listesi
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Başka bir güne göz atılıyorsa bilgilendirme kutusu gösterilir
+              if (!_isViewingToday)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Şu anda $_selectedDay gününün programına göz atıyorsunuz. Yalnızca bugünün ($_todayDay) hareketleri tamamlanabilir.',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Gün başlığı ve özet
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    AppStateData.dayFocusMap[_selectedDay] ?? _selectedDay,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                  Expanded(
+                    child: Text(
+                      AppStateData.dayFocusMap[_selectedDay] ?? _selectedDay,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
-                    '${activeList.length} Yapılacak',
+                    '${activeList.length} Hareket',
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -205,41 +331,29 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
               ),
               const SizedBox(height: 12),
 
-              // Yapılacak aktif hareketler
+              // Yapılacak aktif hareketler (lib/widgets/exercise_card.dart)
               if (activeList.isEmpty)
-                const Card(
+                Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Text(
-                      'Bugün için bekleyen hareket yok.',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      _isViewingToday
+                          ? 'Bugün için bekleyen hareket yok.'
+                          : '$_selectedDay günü için kayıtlı hareket bulunmuyor.',
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ),
                 )
               else
                 ...activeList.map((item) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(
-                        item.exercise.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        '${item.exercise.region} • ${item.exercise.sets}\nGeçen: ${item.lastWeekValue.toStringAsFixed(0)} ${item.exercise.unitLabel}  |  Hedef: ${item.targetValue.toStringAsFixed(0)} ${item.exercise.unitLabel}',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      isThreeLine: true,
-                      trailing: ElevatedButton.icon(
-                        onPressed: () => _completeExerciseDialog(item),
-                        icon: const Icon(Icons.check, size: 16),
-                        label: const Text('Tamamla'),
-                      ),
-                    ),
+                  return ExerciseCard(
+                    item: item,
+                    isReadOnly: !_isViewingToday,
+                    onActionPressed: () => _completeExerciseDialog(item),
                   );
                 }),
 
-              // Tamamlanan hareketler (Üstü çizili)
+              // Tamamlanan hareketler ("Tekrarla" butonu ile)
               if (completedList.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Text(
@@ -252,39 +366,10 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                 ),
                 const SizedBox(height: 8),
                 ...completedList.map((item) {
-                  final bool warn = item.hasPerformanceWarning;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: Icon(
-                        warn ? Icons.warning_amber_rounded : Icons.check_circle,
-                        color: warn ? AppColors.error : AppColors.success,
-                      ),
-                      title: Text(
-                        item.exercise.name,
-                        style: const TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Yapılan: ${(item.currentValue ?? 0).toStringAsFixed(0)} ${item.exercise.unitLabel} (Hedef: ${item.targetValue.toStringAsFixed(0)} ${item.exercise.unitLabel})',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: warn ? AppColors.error : AppColors.textSecondary,
-                        ),
-                      ),
-                      trailing: IconButton(
-                        tooltip: 'Geri Al',
-                        icon: const Icon(Icons.undo, size: 20),
-                        onPressed: () {
-                          setState(() {
-                            item.isCompleted = false;
-                            item.currentValue = null;
-                          });
-                        },
-                      ),
-                    ),
+                  return ExerciseCard(
+                    item: item,
+                    isReadOnly: !_isViewingToday,
+                    onActionPressed: () => _repeatExercise(item),
                   );
                 }),
               ],

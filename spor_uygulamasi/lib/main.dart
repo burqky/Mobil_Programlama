@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
+import 'screens/splash_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/catalog_screen.dart';
@@ -19,7 +20,8 @@ class SporUygulamasiApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const AuthScreen(),
+        '/': (context) => const SplashScreen(),
+        '/auth': (context) => const AuthScreen(),
         '/home': (context) => const MainNavigationScreen(),
         '/catalog': (context) => const CatalogScreen(),
       },

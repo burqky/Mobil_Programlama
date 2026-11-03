@@ -18,6 +18,12 @@ class AppStateData {
     'Pazar',
   ];
 
+  /// Sistemin mevcut gününe göre haftanın gün adını döndürür (1: Pazartesi ... 7: Pazar)
+  static String get todayName {
+    final int weekday = DateTime.now().weekday;
+    return weekDays[(weekday - 1).clamp(0, 6)];
+  }
+
   static final Map<String, String> dayFocusMap = {
     'Pazartesi': 'Göğüs & Ön Kol Antrenmanı',
     'Salı': 'Sırt & Arka Kol Antrenmanı',

@@ -2,8 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spor_uygulamasi/main.dart';
 
 void main() {
-  testWidgets('Uygulama baslatma ve giris ekrani testi', (WidgetTester tester) async {
+  testWidgets('Uygulama acilis (Splash) ve giris ekrani testi', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const SporUygulamasiApp());
+
+    // İlk açılışta Splash ekranının göründüğünü doğrula
+    expect(find.text('SPOR TAKİP'), findsOneWidget);
+
+    // 2.5 saniyelik Splash süresini ilerletip Giriş ekranına geçişi doğrula
+    await tester.pump(const Duration(milliseconds: 2600));
+    await tester.pumpAndSettle();
 
     // Giriş ekranı başlığını ve butonunu doğrula
     expect(find.text('Hoş Geldiniz'), findsOneWidget);
