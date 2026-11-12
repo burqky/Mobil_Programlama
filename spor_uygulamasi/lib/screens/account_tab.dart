@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../data/app_state_data.dart';
 
 class AccountTab extends StatefulWidget {
   final String userName;
@@ -17,6 +16,9 @@ class AccountTab extends StatefulWidget {
 }
 
 class _AccountTabState extends State<AccountTab> {
+  // Kullanıcı profil detaylarının (e-posta, üniversite/bölüm) tıklayınca açılıp kapanması
+  bool _showProfileDetails = false;
+
   void _showChangePasswordDialog() {
     final currentPassController = TextEditingController();
     final newPassController = TextEditingController();
@@ -93,76 +95,66 @@ class _AccountTabState extends State<AccountTab> {
       padding: const EdgeInsets.all(16.0),
       child: ListView(
         children: [
-          // Profil Kartı
+          // Profil Kartı (Tıklayınca e-posta ve bölüm detayları açılır)
           Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.background,
-                    backgroundImage: const AssetImage('images/avatar.png'),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'images/avatar.png',
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                setState(() {
+                  _showProfileDetails = !_showProfileDetails;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: AppColors.background,
+                      backgroundImage: const AssetImage('images/avatar.png'),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'images/avatar.png',
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.userName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.userName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.userEmail,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                    if (_showProfileDetails) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.userEmail,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Isparta Uygulamalı Bilimler Üniversitesi\nBilgisayar Mühendisliği',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
           const SizedBox(height: 12),
-
-          const Card(
-            child: ListTile(
-              leading: Icon(
-                Icons.school_outlined,
-                color: AppColors.primary,
-              ),
-              title: Text('Üniversite & Bölüm'),
-              subtitle: Text(
-                'Isparta Uygulamalı Bilimler Üniversitesi\nBilgisayar Mühendisliği Bölümü',
-              ),
-              isThreeLine: true,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.fitness_center_outlined,
-                color: AppColors.primary,
-              ),
-              title: const Text('Program Özeti'),
-              subtitle: Text(
-                'Katalogda ${AppStateData.catalogExercises.length} hareket • Haftalık ${AppStateData.assignedExercises.length} atama',
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
 
           Card(
             child: ListTile(

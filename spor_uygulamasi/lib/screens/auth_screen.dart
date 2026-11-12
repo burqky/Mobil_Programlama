@@ -148,18 +148,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _mode == 0
-                        ? 'Devam etmek için giriş yapın'
-                        : (_mode == 1
-                            ? 'Bilgilerinizi girerek kayıt olun'
-                            : 'Yeni şifrenizi belirleyin'),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
                   const SizedBox(height: 20),
 
                   // Giriş formu kartı (lib/widgets/custom_text_field.dart kullanımı)

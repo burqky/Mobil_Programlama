@@ -47,16 +47,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(_titles[_currentIndex]),
-        actions: [
-          IconButton(
-            tooltip: 'Hareket Havuzu',
-            icon: const Icon(Icons.list_alt_outlined, color: AppColors.primary),
-            onPressed: () async {
-              await Navigator.pushNamed(context, '/catalog');
-              setState(() {});
-            },
-          ),
-        ],
       ),
       body: SafeArea(
         child: pages[_currentIndex],

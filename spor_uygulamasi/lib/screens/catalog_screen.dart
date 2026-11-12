@@ -12,6 +12,8 @@ class CatalogScreen extends StatefulWidget {
 
 class _CatalogScreenState extends State<CatalogScreen> {
   String _selectedFilterRegion = 'Tümü';
+  bool _showRegionManager = false;
+  final Set<String> _expandedCatalogIds = {};
   late TextEditingController _regionInputController;
 
   @override
@@ -102,7 +104,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
             return AlertDialog(
               title: Text(
                 isEditing ? 'Hareketi Düzenle' : 'Yeni Hareket Ekle',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -355,6 +360,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Hareket Havuzu'),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _showRegionManager = !_showRegionManager;
+              });
+            },
+            icon: Icon(
+              _showRegionManager ? Icons.expand_less : Icons.category_outlined,
+              size: 18,
+            ),
+            label: const Text('Bölgeler'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -362,41 +381,41 @@ class _CatalogScreenState extends State<CatalogScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Bölge ekleme alanı
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _regionInputController,
-                      decoration: const InputDecoration(
-                        labelText: 'Yeni Bölge Ekle (Örn: Karın)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+              // Kullanıcı yalnızca "Bölgeler" butonuna bastığında açılan bölge yönetim alanı
+              if (_showRegionManager) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _regionInputController,
+                        decoration: const InputDecoration(
+                          labelText: 'Yeni Bölge Ekle (Örn: Karın)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _addRegion,
-                    child: const Text('Ekle'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Mevcut bölgeler (Wrap + Chip)
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: AppStateData.targetRegions.map((region) {
-                  return Chip(
-                    label: Text(region, style: const TextStyle(fontSize: 12)),
-                    onDeleted: () => _deleteRegion(region),
-                    deleteIconColor: AppColors.textSecondary,
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _addRegion,
+                      child: const Text('Ekle'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: AppStateData.targetRegions.map((region) {
+                    return Chip(
+                      label: Text(region, style: const TextStyle(fontSize: 12)),
+                      onDeleted: () => _deleteRegion(region),
+                      deleteIconColor: AppColors.textSecondary,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // Yatay filtreleme çubuğu
               SizedBox(
@@ -439,7 +458,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Egzersiz listesi
+              // Egzersiz listesi (Tıklayınca detaylar açılır)
               Expanded(
                 child: filteredCatalog.isEmpty
                     ? const Center(
@@ -452,9 +471,22 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         itemCount: filteredCatalog.length,
                         itemBuilder: (context, index) {
                           final item = filteredCatalog[index];
+                          final bool isExpanded = _expandedCatalogIds.contains(
+                            item.id,
+                          );
+
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
+                              onTap: () {
+                                setState(() {
+                                  if (isExpanded) {
+                                    _expandedCatalogIds.remove(item.id);
+                                  } else {
+                                    _expandedCatalogIds.add(item.id);
+                                  }
+                                });
+                              },
                               title: Text(
                                 item.name,
                                 style: const TextStyle(
@@ -462,14 +494,19 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                   color: AppColors.textPrimary,
                                 ),
                               ),
-                              subtitle: Text(
-                                '${item.region} • ${item.sets}\nHedef: ${item.defaultTarget} ${item.unitLabel} | Geçen Hafta: ${item.defaultLastWeek} ${item.unitLabel}',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              isThreeLine: true,
+                              subtitle: isExpanded
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        '${item.region} • ${item.sets}\nHedef: ${item.defaultTarget.toStringAsFixed(0)} ${item.unitLabel}  |  Geçen Hafta: ${item.defaultLastWeek.toStringAsFixed(0)} ${item.unitLabel}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                              isThreeLine: isExpanded,
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

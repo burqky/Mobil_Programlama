@@ -13,6 +13,8 @@ class MeasurementsTab extends StatefulWidget {
 
 class _MeasurementsTabState extends State<MeasurementsTab> {
   String _selectedMetric = 'Kilo';
+  // Tıklanarak detayları açılan ölçüm kayıtlarının ID listesi
+  final Set<String> _expandedMeasurementIds = {};
 
   void _showAddMeasurementDialog() {
     final nextWeekNumber = AppStateData.bodyMeasurements.length + 1;
@@ -265,28 +267,13 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '$_selectedMetric Değişim Grafiği (${_getMetricUnit()})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Kartlara dokunarak değiştirin',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '$_selectedMetric Değişim Grafiği (${_getMetricUnit()})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -361,31 +348,55 @@ class _MeasurementsTabState extends State<MeasurementsTab> {
             ),
           ),
           const SizedBox(height: 8),
-          ...measurements.reversed.map(
-            (m) => Card(
+
+          // Ölçüm geçmişi kartları: Tıklayınca detaylar açılır
+          ...measurements.reversed.map((m) {
+            final bool isExpanded = _expandedMeasurementIds.contains(m.id);
+            return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
+                onTap: () {
+                  setState(() {
+                    if (isExpanded) {
+                      _expandedMeasurementIds.remove(m.id);
+                    } else {
+                      _expandedMeasurementIds.add(m.id);
+                    }
+                  });
+                },
                 leading: const Icon(
                   Icons.calendar_month_outlined,
                   color: AppColors.primary,
                 ),
                 title: Text(
-                  m.summaryInfo,
+                  m.dateLabel,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                subtitle: Text(
-                  'Kol: ${m.armCircumference} cm | Bel: ${m.waistCircumference} cm',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
+                subtitle: isExpanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Kilo: ${m.weight} kg  •  Yağ: %${m.fatRatio}\nKol: ${m.armCircumference} cm  |  Bel: ${m.waistCircumference} cm',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      )
+                    : null,
+                isThreeLine: isExpanded,
+                trailing: Icon(
+                  isExpanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.textSecondary,
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );

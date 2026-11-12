@@ -14,6 +14,8 @@ class WeeklyProgramTab extends StatefulWidget {
 
 class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
   String _selectedDay = AppStateData.weekDays.first;
+  // Tıklanarak detayları açılan hareketlerin ID listesi
+  final Set<String> _expandedExerciseIds = {};
 
   // Havuzdan seçilen hareketi güne ekleme (SimpleDialog kullanımı)
   void _showAddFromCatalogDialog() {
@@ -44,23 +46,9 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${ex.name} (${ex.region})',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    Text(
-                      '${ex.defaultTarget.toStringAsFixed(0)} ${ex.unitLabel}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  ex.name,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
             );
@@ -178,7 +166,7 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
           ),
         ),
 
-        // Seçili günün hareket listesi
+        // Seçili günün hareket listesi (Tıklayınca detaylar açılır)
         Expanded(
           child: dayExercises.isEmpty
               ? const Center(
@@ -192,9 +180,22 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                   itemCount: dayExercises.length,
                   itemBuilder: (context, index) {
                     final item = dayExercises[index];
+                    final bool isExpanded = _expandedExerciseIds.contains(
+                      item.id,
+                    );
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
+                        onTap: () {
+                          setState(() {
+                            if (isExpanded) {
+                              _expandedExerciseIds.remove(item.id);
+                            } else {
+                              _expandedExerciseIds.add(item.id);
+                            }
+                          });
+                        },
                         leading: CircleAvatar(
                           radius: 16,
                           backgroundColor: AppColors.background,
@@ -211,10 +212,16 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                           item.exercise.name,
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        subtitle: Text(
-                          '${item.exercise.region} • Hedef: ${item.targetValue.toStringAsFixed(0)} ${item.exercise.unitLabel}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                        subtitle: isExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  '${item.exercise.region} • ${item.exercise.sets}\nGeçen: ${item.lastWeekValue.toStringAsFixed(0)} ${item.exercise.unitLabel}  |  Hedef: ${item.targetValue.toStringAsFixed(0)} ${item.exercise.unitLabel}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              )
+                            : null,
+                        isThreeLine: isExpanded,
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

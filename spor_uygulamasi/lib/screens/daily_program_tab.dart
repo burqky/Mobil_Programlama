@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../data/app_state_data.dart';
 import '../models/assigned_exercise.dart';
-import '../widgets/day_selector_bar.dart';
 import '../widgets/exercise_card.dart';
 
 class DailyProgramTab extends StatefulWidget {
@@ -14,23 +13,16 @@ class DailyProgramTab extends StatefulWidget {
 
 class _DailyProgramTabState extends State<DailyProgramTab> {
   late final String _todayDay;
-  late String _selectedDay;
-  bool _showOtherDaysBrowser = false;
 
   @override
   void initState() {
     super.initState();
     // Sistemde bugün hangi günse otomatik olarak o günün programı yüklenir
     _todayDay = AppStateData.todayName;
-    _selectedDay = _todayDay;
   }
 
-  bool get _isViewingToday => _selectedDay == _todayDay;
-
-  // Hareketi tamamlama ve ağırlık/süre kaydetme penceresi (Sadece bugünün hareketleri için)
+  // Hareketi tamamlama ve ağırlık/süre kaydetme penceresi
   void _completeExerciseDialog(AssignedExercise item) {
-    if (!_isViewingToday) return;
-
     final TextEditingController valCtrl = TextEditingController(
       text: item.targetValue.toStringAsFixed(0),
     );
@@ -84,7 +76,7 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                   });
                   Navigator.pop(dialogContext);
 
-                  // Geçen hafta veya hedefin altında kalındıysa uyarı veriyoruz
+                  // Geçen hafta veya hedefin altında kalındıysa uyarı veriyoruz (Madde c)
                   if (entered < item.lastWeekValue ||
                       entered < item.targetValue) {
                     final String msg =
@@ -139,8 +131,6 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
 
   // Tamamlanan bir hareketi tekrar yapılacaklar listesine alır
   void _repeatExercise(AssignedExercise item) {
-    if (!_isViewingToday) return;
-
     setState(() {
       item.isCompleted = false;
       item.currentValue = null;
@@ -159,19 +149,19 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
   @override
   Widget build(BuildContext context) {
     final activeList = AppStateData.assignedExercises
-        .where((e) => e.day == _selectedDay && !e.isCompleted)
+        .where((e) => e.day == _todayDay && !e.isCompleted)
         .toList();
     final completedList = AppStateData.assignedExercises
-        .where((e) => e.day == _selectedDay && e.isCompleted)
+        .where((e) => e.day == _todayDay && e.isCompleted)
         .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Üst Bilgi ve "Diğer Günlere Göz At" Kontrol Barı (Mobil ekranlara tam uyumlu tek satır düzen)
+        // Sadeleştirilmiş Üst Gün Bilgisi Barı
         Container(
           color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               Container(
@@ -180,138 +170,37 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  _isViewingToday
-                      ? Icons.today_rounded
-                      : Icons.visibility_outlined,
+                child: const Icon(
+                  Icons.today_rounded,
                   color: AppColors.primary,
                   size: 18,
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _isViewingToday ? 'Bugünün Programı' : 'İncelenen Gün',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      _selectedDay,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
-                onPressed: () {
-                  setState(() {
-                    if (!_isViewingToday) {
-                      _selectedDay = _todayDay;
-                      _showOtherDaysBrowser = false;
-                    } else {
-                      _showOtherDaysBrowser = !_showOtherDaysBrowser;
-                    }
-                  });
-                },
-                icon: Icon(
-                  !_isViewingToday
-                      ? Icons.restore_rounded
-                      : (_showOtherDaysBrowser
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.calendar_view_week_rounded),
-                  size: 16,
-                ),
-                label: Text(
-                  !_isViewingToday
-                      ? 'Bugüne Dön'
-                      : (_showOtherDaysBrowser
-                          ? 'Günleri Gizle'
-                          : 'Diğer Günler'),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                _todayDay,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
         ),
 
-        // Kullanıcı "Diğer Günler" butonuna bastığında açılan yatay gün seçici
-        if (_showOtherDaysBrowser)
-          DaySelectorBar(
-            days: AppStateData.weekDays,
-            selectedDay: _selectedDay,
-            onDaySelected: (day) => setState(() => _selectedDay = day),
-          ),
-
         // Günün hareketleri listesi
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Başka bir güne göz atılıyorsa bilgilendirme kutusu gösterilir
-              if (!_isViewingToday)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Şu anda $_selectedDay gününün programına göz atıyorsunuz. Yalnızca bugünün ($_todayDay) hareketleri tamamlanabilir.',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
               // Gün başlığı ve özet
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
-                      AppStateData.dayFocusMap[_selectedDay] ?? _selectedDay,
+                      AppStateData.dayFocusMap[_todayDay] ?? _todayDay,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -333,14 +222,12 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
 
               // Yapılacak aktif hareketler (lib/widgets/exercise_card.dart)
               if (activeList.isEmpty)
-                Card(
+                const Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     child: Text(
-                      _isViewingToday
-                          ? 'Bugün için bekleyen hareket yok.'
-                          : '$_selectedDay günü için kayıtlı hareket bulunmuyor.',
-                      style: const TextStyle(color: AppColors.textSecondary),
+                      'Bugün için bekleyen hareket yok.',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   ),
                 )
@@ -348,7 +235,6 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                 ...activeList.map((item) {
                   return ExerciseCard(
                     item: item,
-                    isReadOnly: !_isViewingToday,
                     onActionPressed: () => _completeExerciseDialog(item),
                   );
                 }),
@@ -368,7 +254,6 @@ class _DailyProgramTabState extends State<DailyProgramTab> {
                 ...completedList.map((item) {
                   return ExerciseCard(
                     item: item,
-                    isReadOnly: !_isViewingToday,
                     onActionPressed: () => _repeatExercise(item),
                   );
                 }),
