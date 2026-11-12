@@ -16,49 +16,105 @@ class _AuthScreenState extends State<AuthScreen> {
   int _mode = 0;
   bool _isLoading = false;
   bool _hidePassword = true;
+  bool _hideConfirmPassword = true;
 
   final TextEditingController _nameController = TextEditingController(
     text: 'Ahmet Yılmaz',
   );
+  final TextEditingController _usernameController = TextEditingController(
+    text: 'ahmetyilmaz',
+  );
   final TextEditingController _emailController = TextEditingController(
     text: 'ahmet@isparta.edu.tr',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: '0555 123 45 67',
   );
   final TextEditingController _passwordController = TextEditingController(
     text: '123456',
   );
+  final TextEditingController _confirmPasswordController =
+      TextEditingController(
+        text: '123456',
+      );
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   // Giriş ve kayıt işlemi (Future.delayed ile asenkron simülasyon)
   Future<void> _submit() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
     final name = _nameController.text.trim();
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (_mode == 0 && (username.isEmpty || password.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Lütfen e-posta ve şifre giriniz.'),
+          content: Text('Lütfen kullanıcı adı ve şifre giriniz.'),
           backgroundColor: AppColors.error,
         ),
       );
       return;
     }
 
-    if (_mode == 1 && name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen ad soyad giriniz.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
+    if (_mode == 1) {
+      if (name.isEmpty ||
+          username.isEmpty ||
+          email.isEmpty ||
+          phone.isEmpty ||
+          password.isEmpty ||
+          confirmPassword.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lütfen tüm kayıt alanlarını doldurunuz.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      if (password != confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Şifreler birbiriyle eşleşmiyor.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    }
+
+    if (_mode == 2) {
+      if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lütfen e-posta, şifre ve şifre tekrarını giriniz.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      if (password != confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Şifreler birbiriyle eşleşmiyor.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -80,7 +136,9 @@ class _AuthScreenState extends State<AuthScreen> {
     if (name.isNotEmpty) {
       AppStateData.currentUserName = name;
     }
-    AppStateData.currentUserEmail = email;
+    if (email.isNotEmpty) {
+      AppStateData.currentUserEmail = email;
+    }
 
     // Kullanıcı adını constructor ile ana ekrana gönderiyoruz
     Navigator.pushReplacement(
@@ -157,25 +215,51 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Sadece kayıt modunda Ad Soyad gösterilir
+                          // Sadece kayıt modunda İsim Soyisim gösterilir
                           if (_mode == 1) ...[
                             CustomTextField(
                               controller: _nameController,
-                              labelText: 'Ad Soyad',
+                              labelText: 'İsim Soyisim',
                               hintText: 'Adınız ve soyadınız',
                               prefixIcon: Icons.person_outline,
                             ),
                             const SizedBox(height: 12),
                           ],
 
-                          CustomTextField(
-                            controller: _emailController,
-                            labelText: 'E-posta',
-                            hintText: 'ornek@mail.com',
-                            prefixIcon: Icons.email_outlined,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 12),
+                          // Giriş ve kayıt modunda Kullanıcı Adı gösterilir
+                          if (_mode != 2) ...[
+                            CustomTextField(
+                              controller: _usernameController,
+                              labelText: 'Kullanıcı Adı',
+                              hintText: 'Kullanıcı adınız',
+                              prefixIcon: Icons.alternate_email,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Kayıt ve şifre yenileme modunda E-posta gösterilir
+                          if (_mode != 0) ...[
+                            CustomTextField(
+                              controller: _emailController,
+                              labelText: 'E-posta',
+                              hintText: 'ornek@mail.com',
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Sadece kayıt modunda Telefon gösterilir
+                          if (_mode == 1) ...[
+                            CustomTextField(
+                              controller: _phoneController,
+                              labelText: 'Telefon',
+                              hintText: '05XX XXX XX XX',
+                              prefixIcon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
 
                           CustomTextField(
                             controller: _passwordController,
@@ -195,6 +279,32 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                             ),
                           ),
+
+                          // Kayıt ve şifre yenileme modunda Şifre Tekrar gösterilir
+                          if (_mode != 0) ...[
+                            const SizedBox(height: 12),
+                            CustomTextField(
+                              controller: _confirmPasswordController,
+                              labelText: 'Şifre Tekrar',
+                              hintText: 'Şifrenizi tekrar girin',
+                              prefixIcon: Icons.lock_outline,
+                              obscureText: _hideConfirmPassword,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _hideConfirmPassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(
+                                    () => _hideConfirmPassword =
+                                        !_hideConfirmPassword,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
 
                           if (_mode == 0)
                             Align(
