@@ -14,18 +14,20 @@ class WeeklyProgramTab extends StatefulWidget {
 
 class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
   String _selectedDay = AppStateData.weekDays.first;
-  // Tıklanarak detayları açılan hareketlerin ID listesi
-  final Set<String> _expandedExerciseIds = {};
+  // Tıklanarak detayları açılan hareketlerin ID listesi (1. Hafta PDF: List, indexOf, add, removeAt)
+  final List<String> _expandedExerciseIds = [];
 
-  // Havuzdan seçilen hareketi güne ekleme (SimpleDialog kullanımı)
+  // Havuzdan seçilen hareketi güne ekleme (5. Hafta PDF Syf 21-27: SimpleDialog & SimpleDialogOption)
   void _showAddFromCatalogDialog() {
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return SimpleDialog(
-          title: Text('$_selectedDay Gününe Ekle'),
-          children: AppStateData.catalogExercises.map((CatalogExercise ex) {
-            return SimpleDialogOption(
+      builder: (BuildContext dialogContext) {
+        List<Widget> secenekler = [];
+
+        // 1. Hafta PDF Syf 75: for-in döngüsü ile havuzdaki hareketleri SimpleDialogOption olarak ekleme
+        for (CatalogExercise ex in AppStateData.catalogExercises) {
+          secenekler.add(
+            SimpleDialogOption(
               onPressed: () {
                 setState(() {
                   AppStateData.assignedExercises.add(
@@ -37,12 +39,18 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                   );
                 });
                 Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${ex.name} $_selectedDay gününe eklendi.'),
-                    backgroundColor: AppColors.success,
+
+                final snackBar = SnackBar(
+                  duration: const Duration(seconds: 3),
+                  content: Text('${ex.name} $_selectedDay gününe eklendi.'),
+                  backgroundColor: AppColors.success,
+                  action: SnackBarAction(
+                    textColor: Colors.white,
+                    label: 'TAMAM',
+                    onPressed: () {},
                   ),
                 );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
@@ -51,14 +59,38 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
-            );
-          }).toList(),
+            ),
+          );
+        }
+
+        // 5. Hafta PDF Syf 26 (Uygulama-26): İptal seçeneği
+        secenekler.add(
+          SimpleDialogOption(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                'İptal',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        return SimpleDialog(
+          title: Text('$_selectedDay Gününe Ekle'),
+          children: secenekler,
         );
       },
     );
   }
 
-  // Hedef ağırlık/süre düzenleme penceresi
+  // Hedef ağırlık/süre düzenleme penceresi (5. Hafta PDF Syf 19: AlertDialog kalıbı)
   void _editTargetDialog(AssignedExercise item) {
     final lastWeekCtrl = TextEditingController(
       text: item.lastWeekValue.toStringAsFixed(0),
@@ -69,66 +101,100 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(item.exercise.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: lastWeekCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Geçen Hafta (${item.exercise.unitLabel})',
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: targetCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Hedef (${item.exercise.unitLabel})',
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('İptal'),
+      builder: (BuildContext dialogContext) {
+        Widget iptalButonu = TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('İptal'),
+        );
+
+        Widget kaydetButonu = ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
           ),
-          ElevatedButton(
-            onPressed: () {
-              try {
-                final double lw = double.parse(lastWeekCtrl.text.trim());
-                final double tg = double.parse(targetCtrl.text.trim());
-                setState(() {
-                  item.lastWeekValue = lw;
-                  item.targetValue = tg;
-                });
-                Navigator.pop(dialogContext);
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Lütfen geçerli bir sayı giriniz!'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Kaydet'),
+          onPressed: () {
+            // 1. Hafta PDF Syf 95 & 2. Hafta PDF Syf 50-51: try - on FormatException catch - finally
+            try {
+              final double lw = double.parse(lastWeekCtrl.text.trim());
+              final double tg = double.parse(targetCtrl.text.trim());
+              setState(() {
+                item.lastWeekValue = lw;
+                item.targetValue = tg;
+              });
+              Navigator.pop(dialogContext);
+            } on FormatException catch (e) {
+              debugPrint('Sayısal dönüşüm hatası: $e');
+              final snackBar = SnackBar(
+                duration: const Duration(seconds: 3),
+                content: const Text('Lütfen geçerli bir sayı giriniz!'),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  textColor: Colors.white,
+                  label: 'TAMAM',
+                  onPressed: () {},
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            } catch (e) {
+              debugPrint('Beklenmeyen hata: $e');
+            } finally {
+              debugPrint('Hedef güncelleme kontrolü tamamlandı.');
+            }
+          },
+          child: const Text('Kaydet'),
+        );
+
+        AlertDialog alert = AlertDialog(
+          title: Text(item.exercise.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: lastWeekCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Geçen Hafta (${item.exercise.unitLabel})',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: targetCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Hedef (${item.exercise.unitLabel})',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+          actions: [iptalButonu, kaydetButonu],
+        );
+
+        return alert;
+      },
     );
+  }
+
+  // 1. Hafta PDF Syf 40-42 (Uygulama-12): indexOf ve removeAt kullanarak silme
+  void _deleteAssignedExercise(AssignedExercise item) {
+    setState(() {
+      final int index = AppStateData.assignedExercises.indexOf(item);
+      if (index != -1) {
+        AppStateData.assignedExercises.removeAt(index);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final dayExercises = AppStateData.assignedExercises
-        .where((e) => e.day == _selectedDay)
-        .toList();
+    // 1. Hafta PDF Syf 41 & 75: for-in döngüsü ve add() ile seçili günün listesini oluşturma
+    List<AssignedExercise> dayExercises = [];
+    for (AssignedExercise item in AppStateData.assignedExercises) {
+      if (item.day == _selectedDay) {
+        dayExercises.add(item);
+      }
+    }
 
     return Column(
       children: [
@@ -136,27 +202,40 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
         DaySelectorBar(
           days: AppStateData.weekDays,
           selectedDay: _selectedDay,
-          onDaySelected: (day) => setState(() => _selectedDay = day),
+          onDaySelected: (String day) {
+            setState(() {
+              _selectedDay = day;
+            });
+          },
         ),
 
-        // Üst aksiyon butonları
+        // Üst aksiyon butonları (4. Hafta PDF: OutlinedButton, ElevatedButton.icon; 10. Hafta PDF: pushNamed)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                   onPressed: () async {
                     await Navigator.pushNamed(context, '/catalog');
                     setState(() {});
                   },
-                  icon: const Icon(Icons.list, size: 18),
-                  label: const Text('Tüm Hareketlerim'),
+                  child: const Text('Tüm Hareketlerim'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                   onPressed: _showAddFromCatalogDialog,
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Güne Hareket Ekle'),
@@ -166,7 +245,7 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
           ),
         ),
 
-        // Seçili günün hareket listesi (Tıklayınca detaylar açılır)
+        // Seçili günün hareket listesi (6. Hafta PDF Syf 7-13: ListView.builder)
         Expanded(
           child: dayExercises.isEmpty
               ? const Center(
@@ -180,9 +259,10 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                   itemCount: dayExercises.length,
                   itemBuilder: (context, index) {
                     final item = dayExercises[index];
-                    final bool isExpanded = _expandedExerciseIds.contains(
+                    final int expandedIdx = _expandedExerciseIds.indexOf(
                       item.id,
                     );
+                    final bool isExpanded = expandedIdx != -1;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -190,7 +270,7 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                         onTap: () {
                           setState(() {
                             if (isExpanded) {
-                              _expandedExerciseIds.remove(item.id);
+                              _expandedExerciseIds.removeAt(expandedIdx);
                             } else {
                               _expandedExerciseIds.add(item.id);
                             }
@@ -235,13 +315,7 @@ class _WeeklyProgramTabState extends State<WeeklyProgramTab> {
                                 size: 20,
                                 color: AppColors.error,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  AppStateData.assignedExercises.removeWhere(
-                                    (e) => e.id == item.id,
-                                  );
-                                });
-                              },
+                              onPressed: () => _deleteAssignedExercise(item),
                             ),
                           ],
                         ),
