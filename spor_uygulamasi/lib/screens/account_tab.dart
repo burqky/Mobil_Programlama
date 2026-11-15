@@ -25,8 +25,50 @@ class _AccountTabState extends State<AccountTab> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
+      builder: (BuildContext dialogContext) {
+        Widget iptalButonu = TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('İptal'),
+        );
+
+        Widget guncelleButonu = ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: () {
+            if (newPassController.text.trim().length < 4) {
+              final hataSnackBar = SnackBar(
+                duration: const Duration(seconds: 3),
+                content: const Text('Yeni şifre en az 4 karakter olmalıdır.'),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  textColor: Colors.white,
+                  label: 'TAMAM',
+                  onPressed: () {},
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(hataSnackBar);
+              return;
+            }
+            Navigator.pop(dialogContext);
+
+            final snackBar = SnackBar(
+              duration: const Duration(seconds: 3),
+              content: const Text('Şifreniz başarıyla güncellendi.'),
+              backgroundColor: AppColors.success,
+              action: SnackBarAction(
+                textColor: Colors.white,
+                label: 'TAMAM',
+                onPressed: () {},
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          },
+          child: const Text('Güncelle'),
+        );
+
+        AlertDialog alert = AlertDialog(
           title: const Text(
             'Şifre Değiştir',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -53,40 +95,97 @@ class _AccountTabState extends State<AccountTab> {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('İptal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (newPassController.text.trim().length < 4) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Yeni şifre en az 4 karakter olmalıdır.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Şifreniz başarıyla güncellendi.'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              },
-              child: const Text('Güncelle'),
-            ),
-          ],
+          actions: [iptalButonu, guncelleButonu],
         );
+
+        return alert;
       },
     );
   }
 
   void _logout() {
-    Navigator.pushReplacementNamed(context, '/');
+    // 10. Hafta PDF Syf 6: Navigator.pushNamed ile giriş ekranına dönüş
+    Navigator.pushNamed(context, '/auth');
+  }
+
+  // 5. Hafta PDF Syf 56 (Uygulama-33): Yardımcı fonksiyon ile ListTile oluşturma
+  Widget _menuListTileOlustur(
+    IconData ikon,
+    String baslik,
+    Color renk,
+    Function tiklama, {
+    bool okGoster = false,
+  }) {
+    return Card(
+      child: ListTile(
+        leading: Icon(ikon, color: renk),
+        title: Text(
+          baslik,
+          style: TextStyle(
+            color: renk,
+            fontWeight: okGoster ? FontWeight.normal : FontWeight.w600,
+          ),
+        ),
+        trailing: okGoster ? const Icon(Icons.chevron_right) : null,
+        onTap: () {
+          tiklama();
+        },
+      ),
+    );
+  }
+
+  // 1. Hafta PDF: Spread (...) yerine liste metotları ile profil detaylarını oluşturma
+  List<Widget> _profilIceriginiOlustur() {
+    List<Widget> icerik = [
+      CircleAvatar(
+        radius: 40,
+        backgroundColor: AppColors.background,
+        backgroundImage: const AssetImage('images/avatar.png'),
+        child: ClipOval(
+          child: Image.asset(
+            'images/avatar.png',
+            width: 72,
+            height: 72,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        widget.userName,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    ];
+
+    if (_showProfileDetails) {
+      icerik.add(const SizedBox(height: 6));
+      icerik.add(
+        Text(
+          widget.userEmail,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+      icerik.add(const SizedBox(height: 4));
+      icerik.add(
+        const Text(
+          'Isparta Uygulamalı Bilimler Üniversitesi\nBilgisayar Mühendisliği',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    return icerik;
   }
 
   @override
@@ -95,7 +194,7 @@ class _AccountTabState extends State<AccountTab> {
       padding: const EdgeInsets.all(16.0),
       child: ListView(
         children: [
-          // Profil Kartı (Tıklayınca e-posta ve bölüm detayları açılır)
+          // Profil Kartı (5. Hafta PDF: Card, InkWell, ClipOval; 4. Hafta PDF: CircleAvatar, Image.asset)
           Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
@@ -107,80 +206,27 @@ class _AccountTabState extends State<AccountTab> {
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: AppColors.background,
-                      backgroundImage: const AssetImage('images/avatar.png'),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'images/avatar.png',
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.userName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    if (_showProfileDetails) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.userEmail,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Isparta Uygulamalı Bilimler Üniversitesi\nBilgisayar Mühendisliği',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ],
+                  children: _profilIceriginiOlustur(),
                 ),
               ),
             ),
           ),
           const SizedBox(height: 12),
 
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.lock_outline,
-                color: AppColors.textPrimary,
-              ),
-              title: const Text('Şifre Değiştir'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _showChangePasswordDialog,
-            ),
+          _menuListTileOlustur(
+            Icons.lock_outline,
+            'Şifre Değiştir',
+            AppColors.textPrimary,
+            _showChangePasswordDialog,
+            okGoster: true,
           ),
           const SizedBox(height: 8),
 
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: AppColors.error),
-              title: const Text(
-                'Çıkış Yap',
-                style: TextStyle(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: _logout,
-            ),
+          _menuListTileOlustur(
+            Icons.logout,
+            'Çıkış Yap',
+            AppColors.error,
+            _logout,
           ),
         ],
       ),
