@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Giriş ve Kayıt formlarında tekrar kullanılan özelleştirilmiş metin alanı widget'ı
+/// Giriş ve Kayıt formlarında tekrar kullanılan metin alanı widget'ı (10. Hafta PDF Syf 10)
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;

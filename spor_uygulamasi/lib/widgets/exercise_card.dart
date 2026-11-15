@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../models/assigned_exercise.dart';
 
-/// Günün programında aktif ve tamamlanan hareketleri gösteren özel kart widget'ı
-/// Karta tıklandığında detaylar (subtitle) açılıp kapanır (Progressive Disclosure)
+/// Günün programında aktif ve tamamlanan hareketleri gösteren kart widget'ı
+/// 3. Hafta PDF (TextDecoration.lineThrough), 4. Hafta PDF (ElevatedButton.icon, OutlinedButton), 5. Hafta PDF (Card, ListTile)
 class ExerciseCard extends StatefulWidget {
   final AssignedExercise item;
-  final VoidCallback onActionPressed;
+  // 2. Hafta PDF Syf 24: Parametre olarak Function tipi kullanımı
+  final Function onActionPressed;
 
   const ExerciseCard({
     super.key,
@@ -26,7 +27,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   Widget build(BuildContext context) {
     final item = widget.item;
 
-    // Henüz tamamlanmamış hareket kartı
+    // Henüz tamamlanmamış hareket kartı (Madde b: aktif listede gösterilir)
     if (!item.isCompleted) {
       return Card(
         margin: const EdgeInsets.only(bottom: 8),
@@ -51,7 +52,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
               : null,
           isThreeLine: _showDetails,
           trailing: ElevatedButton.icon(
-            onPressed: widget.onActionPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              widget.onActionPressed();
+            },
             icon: const Icon(Icons.check, size: 16),
             label: const Text('Tamamla'),
           ),
@@ -59,7 +66,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
       );
     }
 
-    // Tamamlanmış hareket kartı ("Tekrarla" butonu ile)
+    // Tamamlanmış hareket kartı (3. Hafta PDF Syf 11: TextDecoration.lineThrough ile üstü çizili)
     final bool warn = item.hasPerformanceWarning;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -92,10 +99,11 @@ class _ExerciseCardState extends State<ExerciseCard> {
                 ),
               )
             : null,
-        trailing: OutlinedButton.icon(
-          onPressed: widget.onActionPressed,
-          icon: const Icon(Icons.replay_rounded, size: 16),
-          label: const Text('Tekrarla'),
+        trailing: OutlinedButton(
+          onPressed: () {
+            widget.onActionPressed();
+          },
+          child: const Text('Tekrarla'),
         ),
       ),
     );

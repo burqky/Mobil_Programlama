@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 
 /// Vücut ölçümleri ekranındaki (Kilo, Yağ Oranı, Kol, Bel) özet kutusu widget'ı
+/// 3. Hafta PDF (BoxDecoration, shade renkleri) ve 5. Hafta PDF (GestureDetector) kullanılmıştır
 class MeasurementMetricCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final bool isSelected;
-  final VoidCallback onTap;
+  // 2. Hafta PDF Syf 24: Parametre olarak Function tipi kullanımı
+  final Function onTap;
 
   const MeasurementMetricCard({
     super.key,
@@ -21,13 +23,13 @@ class MeasurementMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.surface,
+          color: isSelected ? AppColors.primaryLight : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
