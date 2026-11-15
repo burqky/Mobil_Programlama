@@ -49,7 +49,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // Giriş ve kayıt işlemi (Future.delayed ile asenkron simülasyon)
+  // Giriş ve kayıt işlemi (2. Hafta PDF Syf 32: Future.delayed ile asenkron simülasyon)
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim();
@@ -140,8 +140,8 @@ class _AuthScreenState extends State<AuthScreen> {
       AppStateData.currentUserEmail = email;
     }
 
-    // Kullanıcı adını constructor ile ana ekrana gönderiyoruz
-    Navigator.pushReplacement(
+    // 10. Hafta PDF Syf 9-10: Navigator.push ve Constructor üzerinden veri aktarımı
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MainNavigationScreen(
@@ -150,6 +150,150 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ),
     );
+  }
+
+  // 1. Hafta PDF Syf 41 & 62: List.add() ve if-else karar yapıları ile form alanlarını oluşturma
+  List<Widget> _formElemanlariniOlustur() {
+    List<Widget> elemanlar = [];
+
+    // Sadece kayıt modunda İsim Soyisim gösterilir
+    if (_mode == 1) {
+      elemanlar.add(
+        CustomTextField(
+          controller: _nameController,
+          labelText: 'İsim Soyisim',
+          hintText: 'Adınız ve soyadınız',
+          prefixIcon: Icons.person_outline,
+        ),
+      );
+      elemanlar.add(const SizedBox(height: 12));
+    }
+
+    // Giriş ve kayıt modunda Kullanıcı Adı gösterilir
+    if (_mode != 2) {
+      elemanlar.add(
+        CustomTextField(
+          controller: _usernameController,
+          labelText: 'Kullanıcı Adı',
+          hintText: 'Kullanıcı adınız',
+          prefixIcon: Icons.alternate_email,
+        ),
+      );
+      elemanlar.add(const SizedBox(height: 12));
+    }
+
+    // Kayıt ve şifre yenileme modunda E-posta gösterilir
+    if (_mode != 0) {
+      elemanlar.add(
+        CustomTextField(
+          controller: _emailController,
+          labelText: 'E-posta',
+          hintText: 'ornek@mail.com',
+          prefixIcon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
+        ),
+      );
+      elemanlar.add(const SizedBox(height: 12));
+    }
+
+    // Sadece kayıt modunda Telefon gösterilir
+    if (_mode == 1) {
+      elemanlar.add(
+        CustomTextField(
+          controller: _phoneController,
+          labelText: 'Telefon',
+          hintText: '05XX XXX XX XX',
+          prefixIcon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+        ),
+      );
+      elemanlar.add(const SizedBox(height: 12));
+    }
+
+    elemanlar.add(
+      CustomTextField(
+        controller: _passwordController,
+        labelText: _mode == 2 ? 'Yeni Şifre' : 'Şifre',
+        hintText: 'Şifrenizi girin',
+        prefixIcon: Icons.lock_outline,
+        obscureText: _hidePassword,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _hidePassword
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            size: 20,
+          ),
+          onPressed: () {
+            setState(() => _hidePassword = !_hidePassword);
+          },
+        ),
+      ),
+    );
+
+    // Kayıt ve şifre yenileme modunda Şifre Tekrar gösterilir
+    if (_mode != 0) {
+      elemanlar.add(const SizedBox(height: 12));
+      elemanlar.add(
+        CustomTextField(
+          controller: _confirmPasswordController,
+          labelText: 'Şifre Tekrar',
+          hintText: 'Şifrenizi tekrar girin',
+          prefixIcon: Icons.lock_outline,
+          obscureText: _hideConfirmPassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _hideConfirmPassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              size: 20,
+            ),
+            onPressed: () {
+              setState(
+                () => _hideConfirmPassword = !_hideConfirmPassword,
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    if (_mode == 0) {
+      elemanlar.add(
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => setState(() => _mode = 2),
+            child: const Text(
+              'Şifremi Unuttum',
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
+        ),
+      );
+    } else {
+      elemanlar.add(const SizedBox(height: 16));
+    }
+
+    elemanlar.add(
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+        onPressed: _isLoading ? null : _submit,
+        child: Text(
+          _isLoading
+              ? 'Lütfen bekleyin...'
+              : (_mode == 0
+                  ? 'Giriş Yap'
+                  : (_mode == 1 ? 'Kayıt Ol' : 'Şifreyi Güncelle')),
+        ),
+      ),
+    );
+
+    return elemanlar;
   }
 
   @override
@@ -162,212 +306,97 @@ class _AuthScreenState extends State<AuthScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: screenWidth > 420 ? 380 : double.infinity,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Üst logo alanı
-                  AspectRatio(
-                    aspectRatio: 3.5,
-                    child: Center(
-                      child: CircleAvatar(
-                        radius: 36,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'images/logo.png',
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
-                                  Icons.fitness_center,
-                                  size: 36,
-                                  color: AppColors.primary,
-                                ),
+        // 6. Hafta PDF Syf 2: ListView ile kaydırılabilir ekran yapısı
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: SizedBox(
+                width: screenWidth > 420 ? 380 : double.infinity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Üst logo alanı (4. Hafta PDF: AspectRatio, CircleAvatar, Image.asset)
+                    AspectRatio(
+                      aspectRatio: 3.5,
+                      child: Center(
+                        child: CircleAvatar(
+                          radius: 36,
+                          backgroundColor: AppColors.primaryLight,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              'images/logo.png',
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.fitness_center,
+                                    size: 36,
+                                    color: AppColors.primary,
+                                  ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _mode == 0
-                        ? 'Hoş Geldiniz'
-                        : (_mode == 1 ? 'Hesap Oluştur' : 'Şifre Yenile'),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Giriş formu kartı (lib/widgets/custom_text_field.dart kullanımı)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Sadece kayıt modunda İsim Soyisim gösterilir
-                          if (_mode == 1) ...[
-                            CustomTextField(
-                              controller: _nameController,
-                              labelText: 'İsim Soyisim',
-                              hintText: 'Adınız ve soyadınız',
-                              prefixIcon: Icons.person_outline,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-
-                          // Giriş ve kayıt modunda Kullanıcı Adı gösterilir
-                          if (_mode != 2) ...[
-                            CustomTextField(
-                              controller: _usernameController,
-                              labelText: 'Kullanıcı Adı',
-                              hintText: 'Kullanıcı adınız',
-                              prefixIcon: Icons.alternate_email,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-
-                          // Kayıt ve şifre yenileme modunda E-posta gösterilir
-                          if (_mode != 0) ...[
-                            CustomTextField(
-                              controller: _emailController,
-                              labelText: 'E-posta',
-                              hintText: 'ornek@mail.com',
-                              prefixIcon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-
-                          // Sadece kayıt modunda Telefon gösterilir
-                          if (_mode == 1) ...[
-                            CustomTextField(
-                              controller: _phoneController,
-                              labelText: 'Telefon',
-                              hintText: '05XX XXX XX XX',
-                              prefixIcon: Icons.phone_outlined,
-                              keyboardType: TextInputType.phone,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-
-                          CustomTextField(
-                            controller: _passwordController,
-                            labelText: _mode == 2 ? 'Yeni Şifre' : 'Şifre',
-                            hintText: 'Şifrenizi girin',
-                            prefixIcon: Icons.lock_outline,
-                            obscureText: _hidePassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _hidePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                setState(() => _hidePassword = !_hidePassword);
-                              },
-                            ),
-                          ),
-
-                          // Kayıt ve şifre yenileme modunda Şifre Tekrar gösterilir
-                          if (_mode != 0) ...[
-                            const SizedBox(height: 12),
-                            CustomTextField(
-                              controller: _confirmPasswordController,
-                              labelText: 'Şifre Tekrar',
-                              hintText: 'Şifrenizi tekrar girin',
-                              prefixIcon: Icons.lock_outline,
-                              obscureText: _hideConfirmPassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _hideConfirmPassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  setState(
-                                    () => _hideConfirmPassword =
-                                        !_hideConfirmPassword,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-
-                          if (_mode == 0)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => setState(() => _mode = 2),
-                                child: const Text(
-                                  'Şifremi Unuttum',
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            )
-                          else
-                            const SizedBox(height: 16),
-
-                          ElevatedButton(
-                            onPressed: _isLoading ? null : _submit,
-                            child: Text(
-                              _isLoading
-                                  ? 'Lütfen bekleyin...'
-                                  : (_mode == 0
-                                      ? 'Giriş Yap'
-                                      : (_mode == 1
-                                          ? 'Kayıt Ol'
-                                          : 'Şifreyi Güncelle')),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 8),
+                    Text(
+                      _mode == 0
+                          ? 'Hoş Geldiniz'
+                          : (_mode == 1 ? 'Hesap Oluştur' : 'Şifre Yenile'),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 20),
 
-                  // Alt geçiş bağlantısı
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _mode == 0
-                            ? 'Hesabınız yok mu?'
-                            : 'Zaten hesabınız var mı?',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
+                    // Giriş formu kartı (5. Hafta PDF: Card)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: _formElemanlariniOlustur(),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _mode = _mode == 0 ? 1 : 0;
-                          });
-                        },
-                        child: Text(
-                          _mode == 0 ? 'Kayıt Ol' : 'Giriş Yap',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Alt geçiş bağlantısı
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _mode == 0
+                              ? 'Hesabınız yok mu?'
+                              : 'Zaten hesabınız var mı?',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _mode = _mode == 0 ? 1 : 0;
+                            });
+                          },
+                          child: Text(
+                            _mode == 0 ? 'Kayıt Ol' : 'Giriş Yap',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

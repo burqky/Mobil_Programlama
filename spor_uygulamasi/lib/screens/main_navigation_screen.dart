@@ -47,6 +47,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(_titles[_currentIndex]),
+        // 10. Hafta PDF Syf 6: Navigator.pushNamed ile Hareket Havuzu ekranına geçiş
+        actions: [
+          IconButton(
+            tooltip: 'Hareket Havuzu',
+            icon: const Icon(Icons.fitness_center),
+            onPressed: () async {
+              await Navigator.pushNamed(context, '/catalog');
+              setState(() {});
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: pages[_currentIndex],
