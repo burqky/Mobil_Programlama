@@ -1,15 +1,26 @@
-class CatalogExercise {
+// Temel egzersiz üst sınıfı (2. Hafta PDF Syf 79-85 - Kalıtım / Inheritance)
+class BaseExerciseItem {
   String id;
   String name;
-  String region;
-  String sets;
-  bool isCardio;
-  double defaultLastWeek;
-  double defaultTarget;
 
+  BaseExerciseItem({required this.id, required this.name});
+
+  String bilgiYazdir() {
+    return '$name ($id)';
+  }
+}
+
+class CatalogExercise extends BaseExerciseItem {
+  String region = '';
+  String sets = '';
+  bool isCardio = false;
+  double defaultLastWeek = 0.0;
+  double defaultTarget = 0.0;
+
+  // İsimli parametreli yapıcı (2. Hafta PDF Syf 76)
   CatalogExercise({
-    required this.id,
-    required this.name,
+    required super.id,
+    required super.name,
     required this.region,
     required this.sets,
     required this.isCardio,
@@ -17,20 +28,47 @@ class CatalogExercise {
     required this.defaultTarget,
   });
 
-  // Kardiyo hareketleri için varsayılan değerlerle nesne oluşturur
+  // İsimli Yapıcı - Named Constructor (2. Hafta PDF Syf 86-89)
   CatalogExercise.cardioDefault({
-    required this.id,
-    required this.name,
+    required super.id,
+    required super.name,
     this.defaultLastWeek = 20.0,
     this.defaultTarget = 30.0,
-  })  : region = 'Kardiyo',
-        sets = '1 Set (Süre)',
-        isCardio = true;
+  }) {
+    region = 'Kardiyo';
+    sets = '1 Set (Süre)';
+    isCardio = true;
+  }
 
-  // Kardiyo ise dakika (dk), ağırlık ise kilogram (kg) döndürür
-  String get unitLabel => isCardio ? 'dk' : 'kg';
+  // Factory Yapıcı - Yönlendirici Yapıcı (2. Hafta PDF Syf 90-95)
+  factory CatalogExercise.varsayilanAgirlik({
+    required String id,
+    required String name,
+    required String region,
+  }) {
+    return CatalogExercise(
+      id: id,
+      name: name,
+      region: region,
+      sets: '3 Set x 10 Tekrar',
+      isCardio: false,
+      defaultLastWeek: 40.0,
+      defaultTarget: 45.0,
+    );
+  }
 
-  // Hedef değerin sıfırdan büyük olmasını kontrol eder
+  // Metot Ezme (Overriding) ve super kullanımı (2. Hafta PDF Syf 81-85)
+  @override
+  String bilgiYazdir() {
+    return '${super.bilgiYazdir()} - $region ($sets)';
+  }
+
+  // Getter: Kardiyo ise dakika (dk), ağırlık ise kilogram (kg) döndürür (2. Hafta PDF Syf 47-49)
+  String get unitLabel {
+    return isCardio ? 'dk' : 'kg';
+  }
+
+  // Setter: Hedef değerin sıfırdan büyük olmasını kontrol eder (2. Hafta PDF Syf 47-49)
   set updateDefaultTarget(double value) {
     if (value > 0) {
       defaultTarget = value;

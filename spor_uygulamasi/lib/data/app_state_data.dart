@@ -18,10 +18,24 @@ class AppStateData {
     'Pazar',
   ];
 
-  /// Sistemin mevcut gününe göre haftanın gün adını döndürür (1: Pazartesi ... 7: Pazar)
+  /// Sistemin mevcut gününe göre haftanın gün adını döndürür (1. Hafta PDF: if - else if - else)
   static String get todayName {
     final int weekday = DateTime.now().weekday;
-    return weekDays[(weekday - 1).clamp(0, 6)];
+    if (weekday == 1) {
+      return 'Pazartesi';
+    } else if (weekday == 2) {
+      return 'Salı';
+    } else if (weekday == 3) {
+      return 'Çarşamba';
+    } else if (weekday == 4) {
+      return 'Perşembe';
+    } else if (weekday == 5) {
+      return 'Cuma';
+    } else if (weekday == 6) {
+      return 'Cumartesi';
+    } else {
+      return 'Pazar';
+    }
   }
 
   static final Map<String, String> dayFocusMap = {
@@ -98,14 +112,11 @@ class AppStateData {
       defaultLastWeek: 140.0,
       defaultTarget: 150.0,
     ),
-    CatalogExercise(
+    // Factory yapıcı ile oluşturulan örnek hareket (2. Hafta PDF Syf 90-95)
+    CatalogExercise.varsayilanAgirlik(
       id: 'cat_7',
       name: 'Overhead Shoulder Press',
       region: 'Omuz',
-      sets: '4 Set x 10 Tekrar',
-      isCardio: false,
-      defaultLastWeek: 40.0,
-      defaultTarget: 42.5,
     ),
     CatalogExercise(
       id: 'cat_8',
